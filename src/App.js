@@ -28,10 +28,18 @@ class App extends React.Component {
 
     grid.forEach(el => 	{
       while (el.length < 10) {
-        el.push([]);
+        el.push([0]);
       }
     })
     console.log(grid)
+    this.setState({grid})
+}
+
+onClick = function(idxRow, idxCol, e) {
+    let { grid } = this.state;
+
+    grid[idxCol][idxRow]++; 
+
     this.setState({grid})
 }
 
@@ -40,11 +48,10 @@ componentDidMount() {
 }
 
 
-
+//https://reactjs.org/docs/handling-events.html
 render() {
 
   const size = 50;
-
 
   return (
     <div>
@@ -53,7 +60,11 @@ render() {
       {this.state.grid 
         && this.state.grid.map((row, idxRow) => 
           <g>
-            {row.map((el, idxCol) => <rect width={size} height={size} x={size*idxRow} y={size*idxCol} fill="gray"></rect>)}
+            {row.map((el, idxCol) => 
+            <g>
+            <rect className="rect" onClick={(e) => this.onClick(idxRow, idxCol, e)} width={size} height={size} x={size*idxRow} y={size*idxCol} fill="gray" /> 
+            <text x={size*idxRow} y={size*idxCol} font-family="Verdana" font-size="30" fill="blue">
+              {el}</text></g>)}
           </g>
         )}     
       </svg>
