@@ -35,11 +35,16 @@ class App extends React.Component {
     this.setState({grid})
 }
 
-onClick = function(idxRow, idxCol, e) {
+onClick = function(idxCol, idxRow, e) {
     let { grid } = this.state;
-
-    grid[idxCol][idxRow]++; 
-
+    console.log( "r",idxRow, "c", idxCol )
+    console.log(idxCol)
+    
+    grid[idxCol].forEach((el, idx, arr) => 
+      arr[idx]++
+    );
+    
+    grid.forEach(el => el[idxRow]++)
     this.setState({grid})
 }
 
@@ -51,20 +56,20 @@ componentDidMount() {
 //https://reactjs.org/docs/handling-events.html
 render() {
 
-  const size = 50;
+  const cellSize = 100;
 
   return (
     <div>
       <header className="container">
-      <svg width={size * 10} height={size * 10}>
+      <svg width={cellSize * 10} height={cellSize * 10}>
       {this.state.grid 
-        && this.state.grid.map((row, idxRow) => 
+        && this.state.grid.map((row, idxCol) => 
           <g>
-            {row.map((el, idxCol) => 
+            {row.map((el, idxRow) => 
             <g>
-            <rect className="rect" onClick={(e) => this.onClick(idxRow, idxCol, e)} width={size} height={size} x={size*idxRow} y={size*idxCol} fill="gray" /> 
-            <text x={size*idxRow} y={size*idxCol} font-family="Verdana" font-size="30" fill="blue">
-              {el}</text></g>)}
+            <rect className="rect" onClick={(e) => this.onClick(idxCol, idxRow, e)} width={cellSize} height={cellSize} x={cellSize * idxRow} y={cellSize * idxCol} fill="gray" /> 
+            <text x={cellSize*idxRow} y={(cellSize * idxCol) + cellSize } font-family="Verdana" fontSize="20" fill="blue">
+              {`e${el}r${idxRow}c${idxCol}`} </text></g>)}
           </g>
         )}     
       </svg>
