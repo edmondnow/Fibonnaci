@@ -17,16 +17,32 @@ class App extends React.Component {
 
 
 
-  fibonnaciNum = function (num, fib = 1, lastFib = 0 ) {
-    if (fib < num ) return this.fibonnaciNum(num, fib + lastFib, fib);
+  isFibonacci = function (num, fib = 1, lastFib = 0 ) {
+    if (fib < num ) return this.isFibonacci(num, fib + lastFib, fib);
     if (fib === num)  return true;
     return false;
   }
 
+  checkGrid = function() {
 
+    let { grid } = this.state;
+    let newGrid = this.makeGrid();
+
+    grid.forEach((arr, idxCol) => {
+        arr.forEach((el, idxRow, arr) => {
+          newGrid[idxCol][idxRow] = this.isFibonacci(el) ? { idxCol, idxRow } : null;
+        })
+    })
+    console.log(">> grid", grid)
+    console.log(">> newGrid", newGrid)
+   
+  }
+  
+
+
+  
 
   makeGrid = function() {
-
     let grid = []
     while(grid.length < 10) {
       grid.push([]);
@@ -37,14 +53,11 @@ class App extends React.Component {
         el.push([0]);
       }
     })
-    console.log(grid)
-    this.setState({grid})
+
+    return grid;
 }
 
-createArray = function (arr1, arr2) {
-  if (!arr1.length < 10) return arr1;
-  arr2.forEach(el => arr1.push(el)) 
-}
+
 
 
 deconstruct = function(grid) {
@@ -61,25 +74,21 @@ deconstruct = function(grid) {
 }
 
 
-checkGrid = function(grid) {
-  
-  this.setState({grid});
-}
 
 onClick = function(idxCol, idxRow, e) {
     let { grid } = this.state;
 
     grid[idxCol].forEach((el, idx, arr) =>  {
       if (idxRow !== idx)  arr[idx]++
-    }
-    
-    );
+    });
     
     grid.forEach(el => el[idxRow]++)
-    this.checkGrid(grid)    
+    this.setState({grid});
+    this.checkGrid();
 }
+
 componentDidMount() {
-  this.makeGrid();
+    this.setState({grid: this.makeGrid()})
 }
 
 
