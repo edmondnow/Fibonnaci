@@ -2,13 +2,6 @@ import './App.css';
 import React from "react";
 
 
-
-
-
-
-
-
-
 class App extends React.Component {
   constructor(props) {
     super(props);
@@ -27,15 +20,13 @@ class App extends React.Component {
 
     let { grid } = this.state;
     let newGrid = this.makeGrid();
-
     grid.forEach((arr, idxCol) => {
         arr.forEach((el, idxRow, arr) => {
-          newGrid[idxCol][idxRow] = this.isFibonacci(el) ? { idxCol, idxRow } : null;
+          newGrid[idxCol][idxRow] = this.isFibonacci(el) ? { idxCol, idxRow, num: el } : null;
         })
     })
-    console.log(">> grid", grid)
-    console.log(">> newGrid", newGrid)
-   
+
+    this.deconstruct(newGrid);
   }
   
 
@@ -61,19 +52,80 @@ class App extends React.Component {
 
 
 deconstruct = function(grid) {
-  let sequences = grid; 
   let columns = [];
-
-  
-
+  // add diagonal neighbours
   while (columns.length < 10) {
-      let column;
-      grid.forEach(el => column.push(el))
+      let column = [];
+      grid.forEach(el => column.push(el[columns.length]))
+      columns.push(column);
   }
 
+  let neighbours = [...grid, ...columns]
+  this.checkSequence(neighbours)
 }
 
 
+checkSequence = function(cont) {
+  let sequences = [];
+
+
+
+  cont.forEach(arr => {
+    let seq = [];
+
+    arr.forEach((el, idx) => {
+      // this could be done better using a sliding window pattern
+      // you could put this before the fibonanci checkj, then you could remove the objects
+      // you could maybe use a for loops too check if they are the sequence, this would remove more syntax
+      let prev = arr[idx - 1];
+      let prev2 = arr[idx - 2];
+      let next = arr[idx + 1];
+      let next2 = arr[idx + 2]
+      let prevExist = el && prev && prev2;
+      let nextExist = el && next && next2;
+      let sumOfPrev = prevExist && (el.num === prev.num + prev2.num);
+      let partOfNext = nextExist && (next2.num === el.num + next.num);
+      let prevOrNext = (el && prev && next) && (next.num === el.num + prev.num)
+      nextExist && console.log(">> next", next.num + el.num, next2.num, el.num, next.num);
+       partOfNext || sumOfPrev || prevOrNext ? seq.push(el) : seq.push(null)
+    })
+
+    sequences.push(seq)
+  });
+  console.log(sequences);
+  console.log("minseq", this.minSeq(sequences));
+}
+
+
+minSeq = function(sequences) {
+  let qualified = []
+  sequences.forEach(seq => {
+    let inner = [];
+      seq.forEach((el, idx) => {
+        
+        if (!el || idx === seq.length ) {
+        
+          if (inner.length >= 5) {
+            qualified.push(inner); 
+            inner = []; 
+            return;
+          }
+
+          return inner = []
+        } 
+        inner.push(el)
+      })
+  })
+
+  qualified.flat();
+  //let dedup = [...new Set(qualifed.map(({idxRow, idxRow, v}) => `${idxRow,idxCol}`))]]
+  //todo check if this actually works
+  return qualified.filter((current, idx, arr) =>
+  idx === arr.findIndex((found) => (
+    current.idxRow === found.idxRow && current.idxCol === found.idxCol
+  ))
+)
+} 
 
 onClick = function(idxCol, idxRow, e) {
     let { grid } = this.state;
@@ -92,11 +144,10 @@ componentDidMount() {
 }
 
 
-//https://reactjs.org/docs/handling-events.html
 render() {
 
   const cellSize = 100;
-
+  const cellNumber = 10;
   return (
     <div>
       <header className="container">
