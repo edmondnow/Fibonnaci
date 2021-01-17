@@ -46,23 +46,32 @@ class App extends React.Component {
   //Deepcloning is expensive, but it is probably better than tons of re-renders
   cloneGrid = (grid) => _.cloneDeep(_.clone(grid));
 
-  // TODO, this function mutates state, needs to be modified to use a deep clone, will yield better render performance
   increment = (grid, idxCol, idxRow) => {
-    grid[idxCol].forEach((el, idx, arr) => {
-      if (idxRow !== idx) arr[idx]++;
-    });
+    return grid.map((el, idx) => {
+      el[idxRow]++;
 
-    grid.forEach((el) => el[idxRow]++);
-    // return statement needed when using deep clone
+      if (idxCol === idx) {
+        return el.map((el2, idx2) => {
+          return idx2 !== idxRow ? ++el2 : el2;
+        });
+      }
+
+      return el
+    });
   };
 
-  onClick = (idxCol, idxRow, e) => {
+  // let clonedGrid3 = clonedGrid.map((el) => el[idxRow]++);
+
+  // return statement needed when using deep clone
+
+  onClick = async (idxCol, idxRow, e) => {
     const { grid } = this.state;
     let clicked = { idxCol, idxRow };
-
+    let clonedGrid = this.cloneGrid(grid);
     // This function mutates state, once it is fixed, the return value needs to be used to setState
-    this.increment(grid, idxCol, idxRow)
-    this.setState({ clicked });
+    let incrementedGrid = this.increment(clonedGrid, idxCol, idxRow);
+    console.log("inc", incrementedGrid);
+    await this.setState({ grid: incrementedGrid, clicked });
     this.checkGrid();
   };
 
@@ -220,8 +229,7 @@ class App extends React.Component {
       });
     });
 
-  
-    return qualifiedSeqs
+    return qualifiedSeqs;
   };
 
   setFibsToZero = (fibs, clonedGrid) => {
@@ -249,14 +257,14 @@ class App extends React.Component {
   };
 
   render() {
-    const { length, cellSize } = this.state;
+    const { length, cellSize, grid } = this.state;
 
     return (
       <div>
         <header className="container">
           <svg width={cellSize * length} height={cellSize * length}>
-            {this.state.grid &&
-              this.state.grid.map((row, idxCol) => (
+            {grid &&
+              grid.map((row, idxCol) => (
                 <g>
                   {row.map((el, idxRow) => (
                     <g key={idxRow.toString() + idxCol.toString()}>
