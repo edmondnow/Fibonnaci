@@ -115,7 +115,7 @@ class App extends React.Component {
 
       arr.forEach((el, idx) => {
        
-        // this could be placed before this.isFibonacci is used, avoiding the use of objects in this function, checking for null values is terrible bussiness
+        // this could be placed before this.isFibonacci is used, avoiding the use of objects in this function, checking for null values is terrible business
         // a for loop could be used to have less syntax, but I find this readable
         let prev = arr[idx - 1];
         let prev2 = arr[idx - 2];
@@ -140,13 +140,13 @@ class App extends React.Component {
     let qualified = [];
     const { grid, minimumSeqLength } = this.state;
 
-    //Avoiding mutating state, I have to deep clone the grid, otherwise nested arrays will be referenced, and changing them will cause tons of re-renders
+    //To avoid mutating state, I have to deep clone the grid, otherwise nested arrays will be referenced, and changing them will cause tons of re-renders
     //Deepcloning is expensive, but it is probably better than tons of re-renders
 
-      
     let clonedGrid = cloneDeep(clone(grid))
 
 
+    // This still yields some arrays that use a lax definition of "next to each other" e.g. [1, 1, 2, 3, 5, 1, 1, 2, 3]. See discussion in Notion.
     sequences.forEach((seq) => {
       let minSeq = [];
       seq.forEach((el, idx) => {
@@ -174,7 +174,7 @@ class App extends React.Component {
           )
       );
 
-    // does state mutate here?
+
     deduplicatedQualified.forEach((el) => {
       if (el) clonedGrid[el.idxCol][el.idxRow] = 0;
     });
@@ -215,7 +215,7 @@ class App extends React.Component {
 
   render() {
     const { length, cellSize } = this.state;
-
+  
     return (
       <div>
         <header className="container">
@@ -238,11 +238,11 @@ class App extends React.Component {
                         className="text"
                         x={cellSize * idxRow + cellSize / 3}
                         y={cellSize * idxCol - cellSize / 3 + cellSize}
-                        font-family="Verdana"
+                        fontFamily="PT Serif"
                         fontSize="12"
                         fill="blue"
                       >
-                        {`${el > 0 ? el : ""}`}{" "}
+                        {`${el > 0 ? el : ""}`}
                       </text>
                     </g>
                   ))}
