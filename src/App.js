@@ -60,10 +60,6 @@ class App extends React.Component {
     });
   };
 
-  // let clonedGrid3 = clonedGrid.map((el) => el[idxRow]++);
-
-  // return statement needed when using deep clone
-
   onClick = async (idxCol, idxRow, e) => {
     const { grid } = this.state;
     let clicked = { idxCol, idxRow };
@@ -132,7 +128,7 @@ class App extends React.Component {
   getDiagonals = function (arr, length) {
     let diagonals = [];
 
-    // TODO this is O(n^2), should be improved
+    // g this is O(n^2), should be improved
     // Run the function separately: https://repl.it/@EdmondBitay/Algorithms-and-Data-Structures-1#diagonal.js (approximate version)
 
     for (var j = 0; j < length; j++) {
