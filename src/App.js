@@ -43,7 +43,7 @@ class App extends React.Component {
   };
 
   //To avoid mutating state, I have to deep clone the grid, otherwise nested arrays will be referenced, and changing them will cause tons of re-renders
-  //Deepcloning is expensive, but it is probably better than tons of re-renders
+  //Deepcloning is expensive, but it is better than tons of re-renders
   cloneGrid = (grid) => _.cloneDeep(_.clone(grid));
 
   increment = (grid, idxCol, idxRow) => {
