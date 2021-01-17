@@ -13,13 +13,35 @@
   color: white;
 }
 
+.text {
+  user-select: none;
+  pointer-events: none;
+}
+
 .rect {
   stroke: white;
+  cursor: pointer;
 }
 
 .yellow {
   animation: glow 2s;
 }
+
+.green {
+  animation: green-glow 2s;
+}
+
+
+@keyframes green-glow {
+	0% {
+    fill: rgb(3, 233, 72);
+    opacity: 0;
+	}
+	100% {
+    opacity: 1;
+	}
+}
+
 
 @keyframes glow {
 	0% {
