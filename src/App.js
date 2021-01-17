@@ -5,7 +5,7 @@ import React from "react";
 class App extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {grid: null}
+    this.state = {grid: null, clicked: {}}
   }
 
 
@@ -86,7 +86,7 @@ checkSequence = function(cont) {
       let sumOfPrev = prevExist && (el.num === prev.num + prev2.num);
       let partOfNext = nextExist && (next2.num === el.num + next.num);
       let prevOrNext = (el && prev && next) && (next.num === el.num + prev.num)
-      nextExist && console.log(">> next", next.num + el.num, next2.num, el.num, next.num);
+   
        partOfNext || sumOfPrev || prevOrNext ? seq.push(el) : seq.push(null)
     })
 
@@ -127,15 +127,16 @@ minSeq = function(sequences) {
 )
 } 
 
-onClick = function(idxCol, idxRow, e) {
+onClick =   function(idxCol, idxRow, e) {
+  
     let { grid } = this.state;
-
+    let clicked = {idxCol, idxRow}
     grid[idxCol].forEach((el, idx, arr) =>  {
       if (idxRow !== idx)  arr[idx]++
     });
     
-    grid.forEach(el => el[idxRow]++)
-    this.setState({grid});
+    grid.forEach(el => el[idxRow]++);
+    this.setState({grid, clicked})
     this.checkGrid();
 }
 
@@ -144,23 +145,35 @@ componentDidMount() {
 }
 
 
-render() {
+componentDidUpdate()  {
+  const {clicked} = this.state;
+  setTimeout(() => 
+   { if (clicked.hasOwnProperty("idxRow"))  this.setState({clicked: {}}) }, 2000);
+}
 
+getClassNames = function (idxCol, idxRow) {
+  const { clicked } = this.state
+  const sameRowOrCol = (clicked.idxCol === idxCol || clicked.idxRow === idxRow)
+  console.log('>>', sameRowOrCol)
+  return sameRowOrCol ? "yellow" : ""
+}
+
+render() {
   const cellSize = 100;
-  const cellNumber = 10;
+ 
   return (
     <div>
       <header className="container">
       <svg width={cellSize * 10} height={cellSize * 10}>
       {this.state.grid 
-        && this.state.grid.map((row, idxCol) => 
-          <g>
-            {row.map((el, idxRow) => 
+        && this.state.grid.map((row, idxCol) =>  
             <g>
-            <rect className="rect" onClick={(e) => this.onClick(idxCol, idxRow, e)} width={cellSize} height={cellSize} x={cellSize * idxRow} y={cellSize * idxCol} fill="gray" /> 
-            <text x={cellSize*idxRow} y={(cellSize * idxCol) + cellSize } font-family="Verdana" fontSize="20" fill="blue">
-              {`${el}`} </text></g>)}
-          </g>
+              {row.map((el, idxRow) => 
+              <g key={idxRow.toString() +  idxCol.toString()}>
+                <rect className={(this.getClassNames(idxCol, idxRow))} onClick={(e) => this.onClick(idxCol, idxRow, e)} width={cellSize} height={cellSize} x={cellSize * idxRow} y={cellSize * idxCol} fill="gray" /> 
+                <text x={cellSize*idxRow} y={(cellSize * idxCol) + cellSize } font-family="Verdana" fontSize="20" fill="blue">
+                {`${el}`} </text></g>)}
+               </g>
         )}     
       </svg>
       </header>
