@@ -1,32 +1,29 @@
 import "./App.css";
 import React from "react";
-import { clone, cloneDeep} from "lodash";
+import _ from "lodash";
 
 class App extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { grid: null, clicked: {}, length: 50, cellSize: 25, minimumSeqLength: 5 };
+    this.state = {
+      grid: null,
+      clicked: {},
+      length: 50,
+      cellSize: 25,
+      minSeqLength: 5,
+    };
   }
 
-  isFibonacci = function (num, fib = 1, lastFib = 0) {
-    if (fib < num) return this.isFibonacci(num, fib + lastFib, fib);
-    if (fib === num) return true;
-    return false;
-  };
+  componentDidMount() {
+    this.setState({ grid: this.makeGrid() });
+  }
 
-  checkGrid = function () {
-    const { grid } = this.state;
-    let newGrid = this.makeGrid();
-    grid.forEach((arr, idxCol) => {
-      arr.forEach((el, idxRow, arr) => {
-        newGrid[idxCol][idxRow] = this.isFibonacci(el)
-          ? { idxCol, idxRow, num: el }
-          : null;
-      });
-    });
-
-    this.deconstruct(newGrid);
-  };
+  componentDidUpdate() {
+    const { clicked } = this.state;
+    setTimeout(() => {
+      if (clicked.hasOwnProperty("idxRow")) this.setState({ clicked: {} });
+    }, 2000);
+  }
 
   makeGrid = function () {
     const { length } = this.state;
@@ -38,19 +35,96 @@ class App extends React.Component {
 
     grid.forEach((el) => {
       while (el.length < length) {
-        el.push([null]);
+        el.push(null);
       }
     });
 
     return grid;
   };
 
-  getDiagonals = function (arr) {
-    const { length } = this.state;
+  //To avoid mutating state, I have to deep clone the grid, otherwise nested arrays will be referenced, and changing them will cause tons of re-renders
+  //Deepcloning is expensive, but it is probably better than tons of re-renders
+  cloneGrid = (grid) => _.cloneDeep(_.clone(grid));
+
+  // TODO, this function mutates state, needs to be modified to use a deep clone, will yield better render performance
+  increment = (grid, idxCol, idxRow) => {
+    grid[idxCol].forEach((el, idx, arr) => {
+      if (idxRow !== idx) arr[idx]++;
+    });
+
+    grid.forEach((el) => el[idxRow]++);
+    // return statement needed when using deep clone
+  };
+
+  onClick = (idxCol, idxRow, e) => {
+    const { grid } = this.state;
+    let clicked = { idxCol, idxRow };
+
+    // This function mutates state, once it is fixed, the return value needs to be used to setState
+    this.increment(grid, idxCol, idxRow)
+    this.setState({ clicked });
+    this.checkGrid();
+  };
+
+  isFibonacci = function (num, fib = 1, lastFib = 0) {
+    if (fib < num) return this.isFibonacci(num, fib + lastFib, fib);
+    if (fib === num) return true;
+    return false;
+  };
+
+  checkFibonacci = (grid) => {
+    let fibGrid = this.makeGrid();
+    grid.forEach((arr, idxCol) => {
+      arr.forEach((el, idxRow, arr) => {
+        fibGrid[idxCol][idxRow] = this.isFibonacci(el)
+          ? { idxCol, idxRow, num: el }
+          : null;
+      });
+    });
+
+    return fibGrid;
+  };
+  checkGrid = function () {
+    const {
+      state: { grid, length, minSeqLength },
+      ...functions
+    } = this;
+    let clonedGrid = this.cloneGrid(grid);
+    // extends lodash prototype chain, not really readable, but kind of cool;
+    _.mixin({ ...functions });
+
+    /* the functions here are connected to the prototype chain of lodash, thus they do not have access to the component state,
+       which is great, cause then you cannot rely on state in the function, making them purer.
+    */
+
+    let checkedGrid = _.chain(grid)
+      .checkFibonacci()
+      .deconstruct(length)
+      .checkSequence()
+      .checkMinSeqLength(minSeqLength)
+      .flatten()
+      .deduplicate()
+      .setFibsToZero(clonedGrid)
+      .value();
+
+    this.setState({ grid: checkedGrid });
+  };
+
+  deconstruct = function (grid, length) {
+    let neighbours = [
+      ...grid,
+      ...this.getColumns(grid),
+      ...this.getDiagonals(grid),
+    ];
+    let reverseNeighbours = neighbours.slice().reverse();
+    return [...neighbours, ...reverseNeighbours];
+  };
+
+  getDiagonals = function (arr, length) {
     let diagonals = [];
 
     // TODO this is O(n^2), should be improved
-    // Run the function separately: https://repl.it/@EdmondBitay/Algorithms-and-Data-Structures-1#diagonal.js
+    // Run the function separately: https://repl.it/@EdmondBitay/Algorithms-and-Data-Structures-1#diagonal.js (approximate version)
 
     for (var j = 0; j < length; j++) {
       let forward = [];
@@ -78,7 +152,6 @@ class App extends React.Component {
         }
       }
 
-  
       diagonals.push(
         ...[forward, reverse, forwardRemainder, backwardRemainder]
       );
@@ -87,34 +160,25 @@ class App extends React.Component {
     return diagonals.filter((arr) => arr.length > 0);
   };
 
-
-  getColumns = function(grid) {
+  getColumns = function (grid, length) {
     let columns = [];
-    const { length } = this.state;
 
-    while(columns.length < length) {
+    while (columns.length < length) {
       let column = [];
       grid.forEach((el) => column.push(el[columns.length]));
       columns.push(column);
     }
 
     return columns;
-  }
-
-  deconstruct = function (grid) {
-    let neighbours = [...grid, ...this.getColumns(grid), ...this.getDiagonals(grid)];
-    let reverseNeighbours = neighbours.slice().reverse();
-    this.checkSequence([...neighbours, ...reverseNeighbours]);
   };
 
-  checkSequence = function (cont) {
+  checkSequence = function (seqCont) {
     let sequences = [];
 
-    cont.forEach((arr) => {
+    seqCont.forEach((arr) => {
       let seq = [];
 
       arr.forEach((el, idx) => {
-       
         // this could be placed before this.isFibonacci is used, avoiding the use of objects in this function, checking for null values is terrible business
         // a for loop could be used to have less syntax, but I find this readable
         let prev = arr[idx - 1];
@@ -133,26 +197,19 @@ class App extends React.Component {
       sequences.push(seq);
     });
 
-    this.checkMinSeqLength(sequences);
+    return sequences;
   };
 
-  checkMinSeqLength = function (sequences) {
-    let qualified = [];
-    const { grid, minimumSeqLength } = this.state;
+  checkMinSeqLength = function (sequences, minSeqLength) {
+    let qualifiedSeqs = [];
 
-    //To avoid mutating state, I have to deep clone the grid, otherwise nested arrays will be referenced, and changing them will cause tons of re-renders
-    //Deepcloning is expensive, but it is probably better than tons of re-renders
-
-    let clonedGrid = cloneDeep(clone(grid))
-
-
-    // This still yields some arrays that use a lax definition of "next to each other" e.g. [1, 1, 2, 3, 5, 1, 1, 2, 3]. See discussion in Notion.
+    // This still yields some arrays that use a lax definition of "next to each other" e.g. [1, 1, 2, 3, 5, 1, 1, 2, 3]. For now it is fine.
     sequences.forEach((seq) => {
       let minSeq = [];
       seq.forEach((el, idx) => {
         if (!el || idx === seq.length) {
-          if (minSeq.length >= minimumSeqLength) {
-            qualified.push(minSeq);
+          if (minSeq.length >= minSeqLength) {
+            qualifiedSeqs.push(minSeq);
             minSeq = [];
             return;
           }
@@ -163,48 +220,26 @@ class App extends React.Component {
       });
     });
 
-    let deduplicatedQualified = qualified
-      .flat()
-      .filter(
-        (current, idx, arr) =>
-          idx ===
-          arr.findIndex(
-            (found) =>
-              current.idxRow === found.idxRow && current.idxCol === found.idxCol
-          )
-      );
+  
+    return qualifiedSeqs
+  };
 
-
-    deduplicatedQualified.forEach((el) => {
+  setFibsToZero = (fibs, clonedGrid) => {
+    fibs.forEach((el) => {
       if (el) clonedGrid[el.idxCol][el.idxRow] = 0;
     });
-
-    
-    this.setState({ grid: clonedGrid });
+    return clonedGrid;
   };
 
-  onClick = function (idxCol, idxRow, e) {
-    const { grid } = this.state;
-    let clicked = { idxCol, idxRow };
-    grid[idxCol].forEach((el, idx, arr) => {
-      if (idxRow !== idx) arr[idx]++;
-    });
-
-    grid.forEach((el) => el[idxRow]++);
-    this.setState({ grid, clicked });
-    this.checkGrid();
-  };
-
-  componentDidMount() {
-    this.setState({ grid: this.makeGrid() });
-  }
-
-  componentDidUpdate() {
-    const { clicked } = this.state;
-    setTimeout(() => {
-      if (clicked.hasOwnProperty("idxRow")) this.setState({ clicked: {} });
-    }, 2000);
-  }
+  deduplicate = (fibs) =>
+    fibs.filter(
+      (current, idx, arr) =>
+        idx ===
+        arr.findIndex(
+          (found) =>
+            current.idxRow === found.idxRow && current.idxCol === found.idxCol
+        )
+    );
 
   getClassNames = function (idxCol, idxRow, el) {
     const { clicked } = this.state;
@@ -215,7 +250,7 @@ class App extends React.Component {
 
   render() {
     const { length, cellSize } = this.state;
-  
+
     return (
       <div>
         <header className="container">
