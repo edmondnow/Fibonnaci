@@ -64,8 +64,6 @@ class App extends React.Component {
     const { grid } = this.state;
     let clicked = { idxCol, idxRow };
     let clonedGrid = this.cloneGrid(grid);
-    
-    // This function mutates state, once it is fixed, the return value needs to be used to setState
     let incrementedGrid = this.increment(clonedGrid, idxCol, idxRow);
   
     await this.setState({ grid: incrementedGrid, clicked });
