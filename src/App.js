@@ -69,7 +69,7 @@ class App extends React.Component {
     let incrementedGrid = this.increment(clonedGrid, idxCol, idxRow);
   
     await this.setState({ grid: incrementedGrid, clicked });
-    this.checkGrid();
+    this.checkGrid(incrementedGrid);
   };
 
   isFibonacci = function (num, fib = 1, lastFib = 0) {
@@ -90,12 +90,12 @@ class App extends React.Component {
 
     return fibGrid;
   };
-  checkGrid = function () {
+  checkGrid = function (clonedGrid) {
     const {
       state: { grid, length, minSeqLength },
       ...functions
     } = this;
-    let clonedGrid = this.cloneGrid(grid);
+   
     // extends lodash prototype chain, not really readable, but kind of cool;
     _.mixin({ ...functions });
 
@@ -120,7 +120,7 @@ class App extends React.Component {
     let neighbours = [
       ...grid,
       ...this.getColumns(grid),
-      ...this.getDiagonals(grid),
+      ...this.getDiagonals(grid, length),
     ];
     let reverseNeighbours = neighbours.slice().reverse();
     return [...neighbours, ...reverseNeighbours];
@@ -162,7 +162,7 @@ class App extends React.Component {
         ...[forward, reverse, forwardRemainder, backwardRemainder]
       );
     }
-
+  
     return diagonals.filter((arr) => arr.length > 0);
   };
 
